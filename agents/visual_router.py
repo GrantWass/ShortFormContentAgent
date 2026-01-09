@@ -1,0 +1,97 @@
+"""Visual Strategy Router - Routes to appropriate visual generation method."""
+from typing import Literal
+from langchain_openai import ChatOpenAI
+from langchain.prompts import ChatPromptTemplate
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent))
+from state import VideoState
+from config import Config
+from logger import logger
+
+
+class VisualStrategyRouter:
+    """Routes to stock footage, AI video, or image slideshow based on article characteristics."""
+    
+    def __init__(self, config: Config):
+        self.config = config
+        self.llm = ChatOpenAI(
+            model=config.OPENAI_MODEL,
+            temperature=0.3,  # Lower temperature for routing decisions
+            api_key=config.OPENAI_API_KEY
+        )
+        self.prompt_template = ChatPromptTemplate.from_messages([
+            ("system", """You are a visual strategy router. Determine the best visual generation method for a news article.
+
+Available strategies:
+1. "stock" - Use stock footage (fast, cost-effective, good for breaking news, real-world scenes)
+2. "ai_video" - Generate AI video (good for abstract concepts, futuristic topics, creative visuals)
+3. "slideshow" - Image slideshow (fallback, good for static concepts, data visualization)
+
+Consider:
+- Article topic and tone
+- Breaking news → stock
+- Abstract/futuristic → ai_video
+- Data/analysis → slideshow
+- Default → stock
+
+Output ONLY one word: "stock", "ai_video", or "slideshow""""),
+            ("human", "Article title: {title}\nArticle text (first 500 chars): {text}\n\nChoose strategy:")
+        ])
+    
+    def __call__(self, state: VideoState) -> VideoState:
+        """Route to appropriate visual strategy."""
+        logger.info("🔀 [Visual Router] Determining visual strategy...")
+        # Allow manual override
+        if "visual_strategy" in state and state["visual_strategy"]:
+            logger.info(f"🔀 [Visual Router] Using manual override: {state['visual_strategy']}")
+            return state
+        
+        article_text = state.get("article_text", "")
+        article_title = state.get("article_title", "")
+        
+        # Simple heuristic-based routing (can be overridden by LLM)
+        strategy = self._heuristic_route(article_text, article_title)
+        logger.info(f"🔀 [Visual Router] Heuristic routing suggests: {strategy}")
+        
+        # Optionally use LLM for more nuanced routing
+        if self.config.OPENAI_API_KEY:
+            try:
+                logger.debug("🔀 [Visual Router] Using LLM for routing decision...")
+                chain = self.prompt_template | self.llm
+                response = chain.invoke({
+                    "title": article_title or "Untitled",
+                    "text": article_text[:500]
+                })
+                llm_strategy = response.content.strip().lower()
+                if llm_strategy in ["stock", "ai_video", "slideshow"]:
+                    strategy = llm_strategy
+                    logger.info(f"🔀 [Visual Router] LLM routing selected: {strategy}")
+            except Exception as e:
+                logger.warning(f"🔀 [Visual Router] LLM routing failed, using heuristic: {e}")
+        
+        state["visual_strategy"] = strategy
+        logger.info(f"🔀 [Visual Router] ✅ Selected strategy: {strategy}")
+        return state
+    
+    def _heuristic_route(self, text: str, title: str) -> Literal["stock", "ai_video", "slideshow"]:
+        """Simple heuristic-based routing."""
+        text_lower = (text + " " + title).lower()
+        
+        # Breaking news indicators
+        breaking_keywords = ["breaking", "urgent", "latest", "just in", "developing"]
+        if any(kw in text_lower for kw in breaking_keywords):
+            return "stock"
+        
+        # Abstract/futuristic topics
+        abstract_keywords = ["future", "ai", "technology", "virtual", "digital", "metaverse", "quantum"]
+        if any(kw in text_lower for kw in abstract_keywords):
+            return "ai_video"
+        
+        # Data/analysis topics
+        data_keywords = ["data", "study", "research", "analysis", "statistics", "survey"]
+        if any(kw in text_lower for kw in data_keywords):
+            return "slideshow"
+        
+        # Default to stock footage
+        return "stock"
