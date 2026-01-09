@@ -20,6 +20,7 @@ class VideoState(TypedDict):
     
     # Visual strategy
     visual_strategy: NotRequired[Literal["stock", "ai_video", "slideshow"]]
+    enable_ai_video: NotRequired[bool]  # Flag to enable/disable AI video generation
     visual_assets: NotRequired[list[str]]  # Paths to video/image files
     
     # Audio

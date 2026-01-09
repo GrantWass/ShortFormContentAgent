@@ -15,6 +15,8 @@ def main():
     parser.add_argument("--output-dir", type=str, help="Output directory (overrides config)")
     parser.add_argument("--strategy", type=str, choices=["stock", "ai_video", "slideshow"],
                        help="Force visual strategy (overrides auto-routing)")
+    parser.add_argument("--enable-ai-video", action="store_true",
+                       help="Enable AI video generation (disabled by default)")
     parser.add_argument("--log-level", type=str, default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"],
                        help="Logging level")
     parser.add_argument("--log-file", type=str, help="Optional log file path")
@@ -54,10 +56,15 @@ def main():
     initial_state = {
         "article_text": article_text or "",
         "article_url": article_url or "",
+        "enable_ai_video": args.enable_ai_video,  # Pass flag to pipeline
     }
     
     if args.strategy:
         initial_state["visual_strategy"] = args.strategy
+        # Validate that ai_video strategy is only used if flag is enabled
+        if args.strategy == "ai_video" and not args.enable_ai_video:
+            logger.warning("⚠️  AI video strategy selected but --enable-ai-video flag not set. Enabling AI video...")
+            initial_state["enable_ai_video"] = True
     
     logger.info("="*60)
     logger.info("Starting TikTok Generator Pipeline")
@@ -67,6 +74,7 @@ def main():
         logger.info(f"Article URL: {article_url}")
     if args.strategy:
         logger.info(f"Visual strategy: {args.strategy} (forced)")
+    logger.info(f"AI video generation: {'ENABLED' if args.enable_ai_video else 'DISABLED (default)'}")
     logger.info(f"Output directory: {config.OUTPUT_DIR}")
     
     try:

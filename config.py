@@ -17,6 +17,7 @@ class Config:
     PIXABAY_API_KEY: Optional[str] = os.getenv("PIXABAY_API_KEY")
     RUNWAY_API_KEY: Optional[str] = os.getenv("RUNWAY_API_KEY")
     PIKA_API_KEY: Optional[str] = os.getenv("PIKA_API_KEY")
+    KLING_API_KEY: Optional[str] = os.getenv("KLING_API_KEY")
     LUMA_API_KEY: Optional[str] = os.getenv("LUMA_API_KEY")
     NYT_API_KEY: Optional[str] = os.getenv("NYT_API_KEY")
     

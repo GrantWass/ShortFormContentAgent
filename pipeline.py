@@ -58,6 +58,13 @@ def create_pipeline(config: Config) -> StateGraph:
     # Conditional routing based on visual strategy
     def route_visuals(state: VideoState) -> Literal["stock_footage", "ai_video", "image_slideshow"]:
         strategy = state.get("visual_strategy", "stock")
+        enable_ai_video = state.get("enable_ai_video", False)
+        
+        # Safety check: don't route to ai_video if disabled
+        if strategy == "ai_video" and not enable_ai_video:
+            logger.warning("🔀 [Pipeline] AI video requested but disabled, routing to stock footage")
+            return "stock_footage"
+        
         if strategy == "ai_video":
             logger.info("🔀 [Pipeline] Routing to AI Video generation")
             return "ai_video"

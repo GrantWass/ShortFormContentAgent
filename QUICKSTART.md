@@ -20,7 +20,7 @@ pip install -r requirements.txt
 
 4. **Set up environment variables:**
 ```bash
-cp .env.example .env
+cp env.example.template .env
 # Edit .env and add your API keys
 ```
 
@@ -66,7 +66,7 @@ python main.py --url "..." --output-dir ./my_outputs
 ## Pipeline Flow
 
 1. **Article Ingest** - Fetches and cleans article text
-2. **Script Agent** - Generates 30-60s conversational script
+2. **Script Agent** - Generates 60s conversational script
 3. **Prompt Agent** - Converts sentences to visual prompts
 4. **Visual Router** - Chooses strategy (stock/ai_video/slideshow)
 5. **Visual Generation** - Fetches/generates visuals

@@ -9,7 +9,7 @@ from logger import logger
 
 
 class AIVideoAgent:
-    """Generates video clips using Runway/Pika/Luma APIs."""
+    """Generates video clips using Runway/Pika/Kling/Luma APIs."""
     
     def __init__(self, config: Config):
         self.config = config
@@ -30,16 +30,20 @@ class AIVideoAgent:
         for i, prompt in enumerate(prompts):
             logger.info(f"🤖 [AI Video] [{i+1}/{len(prompts)}] Generating: {prompt[:50]}...")
             try:
-                # Try Runway first, then Pika, then Luma
+                # Try Pika first (fastest), then Kling (best quality), then Runway, then Luma
                 video_path = None
                 
-                if self.config.RUNWAY_API_KEY:
+                if self.config.PIKA_API_KEY:
+                    logger.debug("🤖 [AI Video] Trying Pika API (fastest)...")
+                    video_path = self._generate_pika(prompt, i)
+                
+                if not video_path and self.config.KLING_API_KEY:
+                    logger.debug("🤖 [AI Video] Trying Kling API (best quality)...")
+                    video_path = self._generate_kling(prompt, i)
+                
+                if not video_path and self.config.RUNWAY_API_KEY:
                     logger.debug("🤖 [AI Video] Trying Runway API...")
                     video_path = self._generate_runway(prompt, i)
-                
-                if not video_path and self.config.PIKA_API_KEY:
-                    logger.debug("🤖 [AI Video] Trying Pika API...")
-                    video_path = self._generate_pika(prompt, i)
                 
                 if not video_path and self.config.LUMA_API_KEY:
                     logger.debug("🤖 [AI Video] Trying Luma API...")
@@ -73,6 +77,13 @@ class AIVideoAgent:
         """Generate video using Pika API."""
         # Placeholder - Pika API integration
         logger.debug(f"🤖 [AI Video] Pika generation not yet implemented for: {prompt}")
+        return None
+    
+    def _generate_kling(self, prompt: str, index: int) -> Path | None:
+        """Generate video using Kling API."""
+        # Placeholder - Kling API integration
+        # Kling AI is excellent for TikTok content with Hollywood-quality motion
+        logger.debug(f"🤖 [AI Video] Kling generation not yet implemented for: {prompt}")
         return None
     
     def _generate_luma(self, prompt: str, index: int) -> Path | None:
