@@ -24,7 +24,7 @@ class YouTubeScriptAgent:
         )
         self.prompt_template = ChatPromptTemplate.from_messages([
             ("system", YOUTUBE_SCRIPT_SYSTEM),
-            ("human", "Article:\n\n{article_text}\n\nGenerate the YouTube script:"),
+            ("human", "Today's date: {current_date}\n\nArticle:\n\n{article_text}\n\nGenerate the YouTube script:"),
         ])
 
     def __call__(self, state: VideoState) -> VideoState:
@@ -38,7 +38,10 @@ class YouTubeScriptAgent:
         logger.info(f"🎬 [YouTube Script] Using {len(truncated)} chars of article text")
 
         chain = self.prompt_template | self.llm
-        response = chain.invoke({"article_text": truncated})
+        response = chain.invoke({
+            "article_text": truncated,
+            "current_date": state.get("current_date", "unknown"),
+        })
 
         content = response.content.strip()
         if "```json" in content:

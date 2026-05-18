@@ -1,0 +1,12 @@
+Paste your first article text here.
+
+Replace everything in this file with the full body of the article you want to turn into a video. Plain text works best — no HTML or markdown needed.
+
+Run with just this file:
+    python main.py input/1.txt
+
+Combine with other articles:
+    python main.py input/1.txt input/2.txt
+
+YouTube long-form:
+    python main.py input/1.txt --youtube

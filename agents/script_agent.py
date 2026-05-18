@@ -23,7 +23,7 @@ class ScriptAgent:
         )
         self.prompt_template = ChatPromptTemplate.from_messages([
             ("system", TIKTOK_SCRIPT_SYSTEM),
-            ("human", "Article:\n\n{article_text}\n\nGenerate a TikTok script:"),
+            ("human", "Today's date: {current_date}\n\nArticle:\n\n{article_text}\n\nGenerate a TikTok script:"),
         ])
     
     def __call__(self, state: VideoState) -> VideoState:
@@ -41,7 +41,10 @@ class ScriptAgent:
         logger.info(f"✍️  [Script Agent] Calling LLM to generate script (using {self.config.OPENAI_MODEL})...")
         
         chain = self.prompt_template | self.llm
-        response = chain.invoke({"article_text": truncated_text})
+        response = chain.invoke({
+            "article_text": truncated_text,
+            "current_date": state.get("current_date", "unknown"),
+        })
         
         # Parse JSON response
         content = response.content.strip()

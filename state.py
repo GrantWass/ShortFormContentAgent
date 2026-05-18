@@ -40,5 +40,7 @@ class VideoState(TypedDict):
     chapters: NotRequired[list[dict]]  # [{title, content, sentences, image_queries}, ...]
 
     # Metadata
+    source_files: NotRequired[list[str]]  # Input file paths that were combined
+    current_date: NotRequired[str]        # Execution date passed to LLMs (e.g. "May 18, 2026")
     errors: NotRequired[list[str]]
     metadata: NotRequired[dict]
