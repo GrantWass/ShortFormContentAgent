@@ -12,7 +12,7 @@ def load_files(paths: list[str], logger) -> tuple[str, list[str]]:
     articles = []
     resolved = []
     for raw in paths:
-        p = Path(raw)
+        p = Path(f"input/{raw}.txt") if raw.isdigit() else Path(raw)
         if not p.exists():
             logger.error(f"File not found: {raw}")
             sys.exit(1)
