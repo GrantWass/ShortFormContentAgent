@@ -48,30 +48,26 @@ class VisualStrategyRouter:
         
         article_text = state.get("article_text", "")
         article_title = state.get("article_title", "")
-        
-        # Simple heuristic-based routing (can be overridden by LLM)
+
+        # LLM decides first; heuristic is fallback only
         strategy = self._heuristic_route(article_text, article_title, enable_ai_video)
-        logger.info(f"🔀 [Visual Router] Heuristic routing suggests: {strategy}")
-        
-        # Optionally use LLM for more nuanced routing
-        if self.config.OPENAI_API_KEY:
-            try:
-                logger.debug("🔀 [Visual Router] Using LLM for routing decision...")
-                chain = self.prompt_template | self.llm
-                response = chain.invoke({
-                    "title": article_title or "Untitled",
-                    "text": article_text[:500]
-                })
-                llm_strategy = response.content.strip().lower()
-                # Filter out ai_video if disabled
-                if llm_strategy == "ai_video" and not enable_ai_video:
-                    logger.debug("🔀 [Visual Router] LLM suggested ai_video but it's disabled, using heuristic instead")
-                    llm_strategy = strategy
-                if llm_strategy in ["stock", "ai_video", "slideshow"]:
-                    strategy = llm_strategy
-                    logger.info(f"🔀 [Visual Router] LLM routing selected: {strategy}")
-            except Exception as e:
-                logger.warning(f"🔀 [Visual Router] LLM routing failed, using heuristic: {e}")
+        try:
+            logger.info("🔀 [Visual Router] Asking LLM to choose strategy...")
+            chain = self.prompt_template | self.llm
+            response = chain.invoke({
+                "title": article_title or "Untitled",
+                "text": article_text[:500]
+            })
+            llm_strategy = response.content.strip().lower()
+            if llm_strategy == "ai_video" and not enable_ai_video:
+                logger.warning("🔀 [Visual Router] LLM chose ai_video but it's disabled, falling back to heuristic")
+            elif llm_strategy in ["stock", "wikimedia", "ai_video", "slideshow"]:
+                strategy = llm_strategy
+                logger.info(f"🔀 [Visual Router] LLM selected: {strategy}")
+            else:
+                logger.warning(f"🔀 [Visual Router] LLM returned unexpected value '{llm_strategy}', using heuristic")
+        except Exception as e:
+            logger.warning(f"🔀 [Visual Router] LLM call failed, using heuristic fallback: {e}")
         
         state["visual_strategy"] = strategy
         logger.info(f"🔀 [Visual Router] ✅ Selected strategy: {strategy}")
