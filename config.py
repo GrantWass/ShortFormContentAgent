@@ -24,11 +24,18 @@ class Config:
     # Paths
     OUTPUT_DIR: Path = Path(os.getenv("OUTPUT_DIR", "./outputs"))
     
-    # Video Settings
+    # Short-form video settings
     VIDEO_WIDTH: int = 1080
     VIDEO_HEIGHT: int = 1920
     TARGET_DURATION_SECONDS: tuple[int, int] = (30, 60)
     WORDS_PER_MINUTE: int = 150
+
+    # YouTube long-form settings
+    YOUTUBE_WIDTH: int = 1920
+    YOUTUBE_HEIGHT: int = 1080
+    YOUTUBE_TARGET_WORDS: tuple[int, int] = (1800, 2000)  # ~12 min at 150 WPM
+    YOUTUBE_TITLE_CARD_DURATION: int = 3  # seconds per chapter title card
+    YOUTUBE_CLIP_DURATION: int = 7  # default seconds per Ken Burns image clip
     
     # Visual Strategy Settings
     STOCK_FOOTAGE_DURATION: tuple[int, int] = (3, 5)  # seconds per clip

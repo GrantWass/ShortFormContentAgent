@@ -7,6 +7,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 from state import VideoState
 from config import Config
 from logger import logger
+from prompts import VISUAL_PROMPT_SYSTEM
 
 
 class PromptAgent:
@@ -20,26 +21,8 @@ class PromptAgent:
             api_key=config.OPENAI_API_KEY
         )
         self.prompt_template = ChatPromptTemplate.from_messages([
-            ("system", """You are a visual prompt generator for video production. Convert spoken narration into abstract, reusable visual prompts.
-
-RULES:
-1. One prompt per sentence
-2. Prompts should be abstract and cinematic, not literal
-3. NO logos, text, or brand references
-4. NO specific people or locations (unless abstract)
-5. Focus on mood, atmosphere, and visual concepts
-6. Think in terms of stock footage, B-roll, or abstract visuals
-7. Prompts should work for both video clips and images
-
-Examples:
-- "Breaking news alert" → "cinematic city skyline at night, newsroom atmosphere"
-- "Economic data shows growth" → "animated data visualization, upward trending graphs"
-- "People are concerned" → "diverse crowd reaction shots, worried expressions"
-- "Technology is advancing" → "futuristic tech interfaces, glowing circuits"
-
-Output format: JSON array of strings
-["prompt 1", "prompt 2", "prompt 3", ...]"""),
-            ("human", "Sentences:\n{sentences}\n\nGenerate visual prompts (one per sentence):")
+            ("system", VISUAL_PROMPT_SYSTEM),
+            ("human", "Sentences:\n{sentences}\n\nGenerate visual prompts (one per sentence):"),
         ])
     
     def __call__(self, state: VideoState) -> VideoState:

@@ -8,6 +8,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 from state import VideoState
 from config import Config
 from logger import logger
+from prompts import VISUAL_ROUTER_SYSTEM
 
 
 class VisualStrategyRouter:
@@ -21,24 +22,8 @@ class VisualStrategyRouter:
             api_key=config.OPENAI_API_KEY
         )
         self.prompt_template = ChatPromptTemplate.from_messages([
-            ("system", """You are a visual strategy router. Determine the best visual generation method for a news article.
-
-Available strategies:
-1. "stock" - Use stock footage (fast, cost-effective, good for breaking news, real-world scenes)
-2. "ai_video" - Generate AI video (good for abstract concepts, futuristic topics, creative visuals) - ONLY if enabled
-3. "slideshow" - Image slideshow (fallback, good for static concepts, data visualization)
-
-Consider:
-- Article topic and tone
-- Breaking news → stock
-- Abstract/futuristic → ai_video (only if AI video generation is enabled)
-- Data/analysis → slideshow
-- Default → stock
-
-IMPORTANT: Do NOT suggest "ai_video" unless explicitly told AI video generation is enabled.
-
-Output ONLY one word: "stock", "ai_video", or "slideshow"."""),
-            ("human", "Article title: {title}\nArticle text (first 500 chars): {text}\n\nChoose strategy:")
+            ("system", VISUAL_ROUTER_SYSTEM),
+            ("human", "Article title: {title}\nArticle text (first 500 chars): {text}\n\nChoose strategy:"),
         ])
     
     def __call__(self, state: VideoState) -> VideoState:

@@ -8,6 +8,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 from state import VideoState
 from config import Config
 from logger import logger
+from prompts import TIKTOK_SCRIPT_SYSTEM
 
 
 class ScriptAgent:
@@ -21,28 +22,8 @@ class ScriptAgent:
             api_key=config.OPENAI_API_KEY
         )
         self.prompt_template = ChatPromptTemplate.from_messages([
-            ("system", """You are a TikTok script writer. Your job is to convert news articles into engaging, conversational scripts for short-form video.
-
-CRITICAL RULES:
-1. Script must be 60 seconds when spoken at ~180 words per minute
-2. Write in a conversational, engaging tone - like you're talking to a friend
-3. NO direct quotes from the article
-4. NO attribution ("NYT says...", "According to...")
-5. NO brand names or logos mentioned
-6. Transform the content - make it your own voice
-7. Focus on the most interesting/engaging aspects
-8. Use simple, clear language
-9. Start with a hook
-9. End with a question or call to action
-
-Output format (JSON):
-{{
-  "script": "Full script text here...",
-  "sentences": ["Sentence 1.", "Sentence 2.", "Sentence 3."]
-}}
-
-Each sentence should be a complete thought that can be visualized."""),
-            ("human", "Article:\n\n{article_text}\n\nGenerate a TikTok script:")
+            ("system", TIKTOK_SCRIPT_SYSTEM),
+            ("human", "Today's date: {current_date}\n\nArticle:\n\n{article_text}\n\nGenerate a TikTok script:"),
         ])
     
     def __call__(self, state: VideoState) -> VideoState:
@@ -60,7 +41,10 @@ Each sentence should be a complete thought that can be visualized."""),
         logger.info(f"✍️  [Script Agent] Calling LLM to generate script (using {self.config.OPENAI_MODEL})...")
         
         chain = self.prompt_template | self.llm
-        response = chain.invoke({"article_text": truncated_text})
+        response = chain.invoke({
+            "article_text": truncated_text,
+            "current_date": state.get("current_date", "unknown"),
+        })
         
         # Parse JSON response
         content = response.content.strip()

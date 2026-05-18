@@ -1,0 +1,5 @@
+Paste your second article text here.
+
+When combined with other files, the agent will synthesize all articles into one cohesive video.
+
+    python main.py input/1.txt input/2.txt
