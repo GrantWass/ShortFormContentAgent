@@ -22,30 +22,42 @@ class WikimediaVisualAgent:
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
     def __call__(self, state: VideoState) -> VideoState:
-        chapters = state.get("chapters", [])
-        if not chapters:
-            raise ValueError("chapters are required for wikimedia_visual agent")
+        queries = self._collect_queries(state)
+        if not queries:
+            raise ValueError("wikimedia_visual requires either chapters (YouTube) or prompts (short-form)")
 
-        total_queries = sum(len(ch.get("image_queries", [])) for ch in chapters)
-        logger.info(f"🖼️  [Wikimedia] Fetching images for {len(chapters)} chapters ({total_queries} queries)...")
-
+        logger.info(f"🖼️  [Wikimedia] Fetching {len(queries)} images...")
         visual_assets: list[str] = []
 
-        for ch_idx, chapter in enumerate(chapters):
-            queries = chapter.get("image_queries", [])
-            logger.info(f"🖼️  [Wikimedia] Chapter {ch_idx + 1} '{chapter.get('title', '')}': {len(queries)} queries")
-            for q_idx, query in enumerate(queries):
-                logger.info(f"🖼️  [Wikimedia]   Searching: {query[:60]}...")
-                path = self._fetch_best_image(query, ch_idx, q_idx)
-                if path:
-                    visual_assets.append(str(path))
-                    logger.info(f"🖼️  [Wikimedia]   ✅ {path.name}")
-                else:
-                    logger.warning(f"🖼️  [Wikimedia]   ⚠️  No image found for: {query}")
+        for idx, query in enumerate(queries):
+            logger.info(f"🖼️  [Wikimedia] [{idx + 1}/{len(queries)}] Searching: {query[:60]}...")
+            path = self._fetch_best_image(query, 0, idx)
+            if path:
+                visual_assets.append(str(path))
+                logger.info(f"🖼️  [Wikimedia]   ✅ {path.name}")
+            else:
+                logger.warning(f"🖼️  [Wikimedia]   ⚠️  No image found for: {query}")
 
-        logger.info(f"🖼️  [Wikimedia] ✅ Downloaded {len(visual_assets)}/{total_queries} images")
+        logger.info(f"🖼️  [Wikimedia] ✅ Downloaded {len(visual_assets)}/{len(queries)} images")
         state["visual_assets"] = visual_assets
         return state
+
+    def _collect_queries(self, state: VideoState) -> list[str]:
+        """Build a flat list of search queries from chapters (YouTube) or prompts (short-form)."""
+        chapters = state.get("chapters", [])
+        if chapters:
+            queries = []
+            for ch_idx, chapter in enumerate(chapters):
+                chapter_queries = chapter.get("image_queries", [])
+                logger.info(f"🖼️  [Wikimedia] Chapter {ch_idx + 1} '{chapter.get('title', '')}': {len(chapter_queries)} queries")
+                queries.extend(chapter_queries)
+            return queries
+
+        # Short-form fallback: use visual prompts as search terms
+        prompts = state.get("prompts", [])
+        if prompts:
+            logger.info(f"🖼️  [Wikimedia] Short-form mode: using {len(prompts)} visual prompts as queries")
+        return prompts
 
     def _fetch_best_image(self, query: str, ch_idx: int, q_idx: int) -> Optional[Path]:
         """Search Commons and download the best matching image."""

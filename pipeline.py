@@ -13,6 +13,7 @@ from agents.visual_router import VisualStrategyRouter
 from agents.visual_stock import StockFootageAgent
 from agents.visual_ai_video import AIVideoAgent
 from agents.visual_slideshow import ImageSlideshowAgent
+from agents.wikimedia_visual import WikimediaVisualAgent
 from agents.voiceover_agent import VoiceoverAgent
 from agents.caption_agent import CaptionAgent
 from agents.video_assembly import VideoAssemblyAgent
@@ -29,6 +30,7 @@ def create_pipeline(config: Config) -> StateGraph:
     stock_agent = StockFootageAgent(config)
     ai_video_agent = AIVideoAgent(config)
     slideshow_agent = ImageSlideshowAgent(config)
+    wikimedia_agent = WikimediaVisualAgent(config)
     voiceover_agent = VoiceoverAgent(config)
     caption_agent = CaptionAgent(config)
     video_assembly = VideoAssemblyAgent(config)
@@ -44,6 +46,7 @@ def create_pipeline(config: Config) -> StateGraph:
     workflow.add_node("stock_footage", stock_agent)
     workflow.add_node("ai_video", ai_video_agent)
     workflow.add_node("image_slideshow", slideshow_agent)
+    workflow.add_node("wikimedia", wikimedia_agent)
     workflow.add_node("voiceover_agent", voiceover_agent)
     workflow.add_node("caption_agent", caption_agent)
     workflow.add_node("video_assembly", video_assembly)
@@ -56,39 +59,39 @@ def create_pipeline(config: Config) -> StateGraph:
     workflow.add_edge("prompt_agent", "visual_router")
     
     # Conditional routing based on visual strategy
-    def route_visuals(state: VideoState) -> Literal["stock_footage", "ai_video", "image_slideshow"]:
+    def route_visuals(state: VideoState) -> Literal["stock_footage", "ai_video", "image_slideshow", "wikimedia"]:
         strategy = state.get("visual_strategy", "stock")
         enable_ai_video = state.get("enable_ai_video", False)
-        
-        # Safety check: don't route to ai_video if disabled
+
         if strategy == "ai_video" and not enable_ai_video:
             logger.warning("🔀 [Pipeline] AI video requested but disabled, routing to stock footage")
             return "stock_footage"
-        
-        if strategy == "ai_video":
-            logger.info("🔀 [Pipeline] Routing to AI Video generation")
-            return "ai_video"
-        elif strategy == "slideshow":
-            logger.info("🔀 [Pipeline] Routing to Image Slideshow generation")
-            return "image_slideshow"
-        else:
-            logger.info("🔀 [Pipeline] Routing to Stock Footage generation")
-            return "stock_footage"
-    
+
+        routes = {
+            "ai_video": "ai_video",
+            "slideshow": "image_slideshow",
+            "wikimedia": "wikimedia",
+        }
+        destination = routes.get(strategy, "stock_footage")
+        logger.info(f"🔀 [Pipeline] Routing to: {destination}")
+        return destination
+
     workflow.add_conditional_edges(
         "visual_router",
         route_visuals,
         {
             "stock_footage": "stock_footage",
             "ai_video": "ai_video",
-            "image_slideshow": "image_slideshow"
+            "image_slideshow": "image_slideshow",
+            "wikimedia": "wikimedia",
         }
     )
-    
+
     # All visual paths converge
     workflow.add_edge("stock_footage", "voiceover_agent")
     workflow.add_edge("ai_video", "voiceover_agent")
     workflow.add_edge("image_slideshow", "voiceover_agent")
+    workflow.add_edge("wikimedia", "voiceover_agent")
     
     workflow.add_edge("voiceover_agent", "caption_agent")
     workflow.add_edge("caption_agent", "video_assembly")

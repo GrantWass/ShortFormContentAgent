@@ -77,24 +77,33 @@ class VisualStrategyRouter:
         logger.info(f"🔀 [Visual Router] ✅ Selected strategy: {strategy}")
         return state
     
-    def _heuristic_route(self, text: str, title: str, enable_ai_video: bool = False) -> Literal["stock", "ai_video", "slideshow"]:
+    def _heuristic_route(self, text: str, title: str, enable_ai_video: bool = False) -> Literal["stock", "wikimedia", "ai_video", "slideshow"]:
         """Simple heuristic-based routing."""
         text_lower = (text + " " + title).lower()
-        
-        # Breaking news indicators
+
+        # Breaking news — stock footage is fastest and most relevant
         breaking_keywords = ["breaking", "urgent", "latest", "just in", "developing"]
         if any(kw in text_lower for kw in breaking_keywords):
             return "stock"
-        
-        # Abstract/futuristic topics - only route to ai_video if enabled
+
+        # Historical or documentary-style content — Wikimedia has better imagery
+        historical_keywords = [
+            "history", "historical", "war", "battle", "century", "ancient", "revolution",
+            "president", "prime minister", "government", "election", "congress", "senate",
+            "treaty", "founded", "discovered", "invented", "assassination", "empire",
+        ]
+        if any(kw in text_lower for kw in historical_keywords):
+            return "wikimedia"
+
+        # Abstract/futuristic topics — only route to ai_video if enabled
         abstract_keywords = ["future", "ai", "technology", "virtual", "digital", "metaverse", "quantum"]
         if any(kw in text_lower for kw in abstract_keywords) and enable_ai_video:
             return "ai_video"
-        
+
         # Data/analysis topics
         data_keywords = ["data", "study", "research", "analysis", "statistics", "survey"]
         if any(kw in text_lower for kw in data_keywords):
             return "slideshow"
-        
+
         # Default to stock footage
         return "stock"

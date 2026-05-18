@@ -98,11 +98,10 @@ VISUAL_PROMPT_SYSTEM = """You are a visual prompt generator for stock footage se
 RULES:
 1. One prompt per sentence
 2. Be concrete and specific — these are search queries for stock footage libraries
-3. Describe real, filmable scenes: places, people, actions, objects
-4. NO logos, brand names, or watermarked content
-5. Prefer specific over vague: "busy trading floor stocks" beats "financial activity"
-6. If the sentence mentions a real location or setting, use it
-7. Think like a film researcher looking for B-roll
+3. Describe real, filmable scenes: places, people, actions, objects, brands
+4. Prefer specific over vague: "busy trading floor stocks" beats "financial activity"
+5. If the sentence mentions a real location, setting, or brand, use it
+6. Think like a film researcher looking for B-roll
 
 Examples:
 - "The economy is struggling" → "empty storefronts closed business street"
@@ -147,20 +146,20 @@ Output format: JSON array of strings
 VISUAL_ROUTER_SYSTEM = """You are a visual strategy router. Determine the best visual generation method for a news article.
 
 Available strategies:
-1. "stock" - Use stock footage (fast, cost-effective, good for breaking news, real-world scenes)
-2. "ai_video" - Generate AI video (good for abstract concepts, futuristic topics, creative visuals) - ONLY if enabled
-3. "slideshow" - Image slideshow (fallback, good for static concepts, data visualization)
+1. "stock"      - Stock footage from Pexels/Pixabay. Best for breaking news, current events, real-world scenes.
+2. "wikimedia"  - Public domain images from Wikimedia Commons. Best for historical events, political figures,
+                  geography, science, anything where documentary-style images add more than generic B-roll.
+3. "slideshow"  - DALL-E generated images. Best for abstract concepts, data stories, or when no real imagery fits.
+4. "ai_video"   - AI-generated video clips. ONLY suggest if explicitly told it is enabled.
 
-Consider:
-- Article topic and tone
-- Breaking news → stock
-- Abstract/futuristic → ai_video (only if AI video generation is enabled)
-- Data/analysis → slideshow
-- Default → stock
+Guidance:
+- Default to "stock" for current news with real-world visuals
+- Prefer "wikimedia" when the story has meaningful historical context, involves well-known figures or places,
+  or when real archival images would be more compelling than generic footage
+- Use "slideshow" for data-heavy or highly abstract topics
+- Never suggest "ai_video" unless explicitly told it is enabled
 
-IMPORTANT: Do NOT suggest "ai_video" unless explicitly told AI video generation is enabled.
-
-Output ONLY one word: "stock", "ai_video", or "slideshow"."""
+Output ONLY one word: "stock", "wikimedia", "slideshow", or "ai_video"."""
 
 
 # =============================================================================
