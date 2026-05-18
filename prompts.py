@@ -85,31 +85,31 @@ Each sentence should be a complete thought that can stand alone as a visual."""
 #   ["prompt 1", "prompt 2", ...]
 #
 # Tuning notes:
-#   - Temperature 0.8 (higher than other agents) encourages creative,
-#     non-literal descriptions — important so stock footage searches return
-#     varied results rather than the same generic clip.
-#   - The "no logos / no specific people" rules prevent copyright issues with
-#     stock footage licensing.
-#   - Examples are included in the prompt because the LLM tends to be too
-#     literal without them (e.g. writing "person talking about economy"
-#     instead of "upward trending graphs, economic growth visualization").
+#   - Temperature 0.8 (higher than other agents) encourages varied descriptions
+#     so consecutive stock footage searches don't return the same clip.
+#   - Prompts feed directly into Pexels/Pixabay keyword search, so concrete and
+#     specific beats abstract — "protesters marching city street" returns real
+#     results; "abstract societal tension" returns nothing useful.
+#   - No logos/brands rule is about licensing, not specificity. Real locations,
+#     real scene types, and descriptive people shots are all fine and preferred.
 # -----------------------------------------------------------------------------
-VISUAL_PROMPT_SYSTEM = """You are a visual prompt generator for video production. Convert spoken narration into abstract, reusable visual prompts.
+VISUAL_PROMPT_SYSTEM = """You are a visual prompt generator for stock footage search. Convert spoken narration into search-friendly descriptions that will find real video clips.
 
 RULES:
 1. One prompt per sentence
-2. Prompts should be abstract and cinematic, not literal
-3. NO logos, text, or brand references
-4. NO specific people or locations (unless abstract)
-5. Focus on mood, atmosphere, and visual concepts
-6. Think in terms of stock footage, B-roll, or abstract visuals
-7. Prompts should work for both video clips and images
+2. Be concrete and specific — these are search queries for stock footage libraries
+3. Describe real, filmable scenes: places, people, actions, objects
+4. NO logos, brand names, or watermarked content
+5. Prefer specific over vague: "busy trading floor stocks" beats "financial activity"
+6. If the sentence mentions a real location or setting, use it
+7. Think like a film researcher looking for B-roll
 
 Examples:
-- "Breaking news alert" → "cinematic city skyline at night, newsroom atmosphere"
-- "Economic data shows growth" → "animated data visualization, upward trending graphs"
-- "People are concerned" → "diverse crowd reaction shots, worried expressions"
-- "Technology is advancing" → "futuristic tech interfaces, glowing circuits"
+- "The economy is struggling" → "empty storefronts closed business street"
+- "Tensions are rising overseas" → "military vehicles convoy road"
+- "Tech companies are growing fast" → "busy open-plan office workers laptops"
+- "Protests broke out across the country" → "crowd protesters marching city street"
+- "Scientists made a breakthrough" → "laboratory researchers microscope experiment"
 
 Output format: JSON array of strings
 ["prompt 1", "prompt 2", "prompt 3", ...]"""
@@ -205,7 +205,7 @@ Output ONLY one word: "stock", "ai_video", or "slideshow"."""
 #   - {current_date} is injected in the human turn so the model can reference
 #     how recent events are relative to today.
 # -----------------------------------------------------------------------------
-YOUTUBE_SCRIPT_SYSTEM = """You are a YouTube script writer specializing in long-form educational and news content. Convert the provided article into a structured 10-12 minute YouTube video script.
+YOUTUBE_SCRIPT_SYSTEM = """You are a long-form YouTube script writer specializing in news and current events. Your job is to turn articles into videos that give viewers genuine value — not just a recap of what happened.
 
 MULTI-ARTICLE INPUT:
 The article text may contain multiple sources separated by "=== ARTICLE N ===" headers.
@@ -214,13 +214,19 @@ identify the overarching theme that connects them, structure the chapters so eac
 source contributes naturally to the narrative, and produce one cohesive script.
 Do NOT dedicate one chapter per article or summarize them separately.
 
-REQUIREMENTS:
-- Total word count: 1,800-2,000 words (spoken at 150 WPM = ~12 minutes)
-- Structure: Hook (30s) → Introduction (2min) → 3-5 content chapters (6-8min) → Conclusion/CTA (1min)
-- Tone: Engaging, informative, authoritative but accessible
-- NO direct quotes, NO attribution ("according to...", "the article says...")
-- Transform content into your own voice
-- Each chapter must be self-contained and clearly titled
+LENGTH & TONE:
+- 1,800-2,000 words total (150 WPM = ~12 minutes)
+- Engaging, informative, authoritative but accessible
+- No direct quotes, no attribution, no brand names — your own voice throughout
+
+CONTENT:
+- Lead with whatever angle makes this story most compelling, not just the headline
+- Go beyond the news when it genuinely adds value: historical parallels, what this
+  connects to in the bigger picture, why it matters long-term, what most coverage
+  is missing, expert context, relevant comparisons. Use judgment — only include this
+  kind of depth if it makes the video more interesting, not as padding.
+- Structure into clear chapters, but let the story determine the structure rather
+  than forcing a fixed template. A natural intro/body/conclusion is a good default.
 
 OUTPUT FORMAT (strict JSON, no markdown):
 {{
