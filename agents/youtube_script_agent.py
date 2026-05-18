@@ -9,6 +9,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 from state import VideoState
 from config import Config
 from logger import logger
+from prompts import YOUTUBE_SCRIPT_SYSTEM
 
 
 class YouTubeScriptAgent:
@@ -22,38 +23,7 @@ class YouTubeScriptAgent:
             api_key=config.OPENAI_API_KEY,
         )
         self.prompt_template = ChatPromptTemplate.from_messages([
-            ("system", """You are a YouTube script writer specializing in long-form educational and news content. Convert the provided article into a structured 10-12 minute YouTube video script.
-
-REQUIREMENTS:
-- Total word count: 1,800-2,000 words (spoken at 150 WPM = ~12 minutes)
-- Structure: Hook (30s) → Introduction (2min) → 3-5 content chapters (6-8min) → Conclusion/CTA (1min)
-- Tone: Engaging, informative, authoritative but accessible
-- NO direct quotes, NO attribution ("according to...", "the article says...")
-- Transform content into your own voice
-- Each chapter must be self-contained and clearly titled
-
-OUTPUT FORMAT (strict JSON, no markdown):
-{{
-  "video_title": "Compelling YouTube title (max 70 chars)",
-  "video_description": "Full YouTube description with chapter timestamps (use 00:00, 02:30, etc. as placeholders)\\n\\nChapters:\\n00:00 Introduction\\n02:30 Chapter 1 Title\\n...",
-  "chapters": [
-    {{
-      "title": "Chapter title",
-      "content": "Full narration text for this chapter (2-4 paragraphs, 200-400 words)",
-      "sentences": ["Complete sentence 1.", "Complete sentence 2.", "..."],
-      "image_queries": ["specific Wikimedia Commons search term", "another specific term", "..."]
-    }}
-  ],
-  "full_script": "Complete concatenated script from all chapters"
-}}
-
-RULES FOR image_queries:
-- Provide one query per 2-3 sentences in the chapter
-- Be highly specific: "Napoleon Bonaparte portrait 1812" not just "Napoleon"
-- Target real subjects: historical figures, places, maps, paintings, artifacts, events
-- These must exist as real images on Wikimedia Commons
-- Include context: "French Revolution guillotine illustration", "Roman Colosseum aerial view", "World War 2 soldiers Normandy"
-"""),
+            ("system", YOUTUBE_SCRIPT_SYSTEM),
             ("human", "Article:\n\n{article_text}\n\nGenerate the YouTube script:"),
         ])
 
